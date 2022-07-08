@@ -6,7 +6,7 @@
   },
   "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
-  "projectname": "ts-demo",
+  "projectname": "coolcar",
   "setting": {
     "useCompilerPlugins": [
       "typescript"
@@ -35,7 +35,9 @@
       "outputPath": ""
     },
     "disableUseStrict": false,
-    "minifyWXML": true
+    "minifyWXML": true,
+    "useApiHook": true,
+    "useIsolateContext": true
   },
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},
