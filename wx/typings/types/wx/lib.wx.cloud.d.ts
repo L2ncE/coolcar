@@ -1,24 +1,20 @@
 /*! *****************************************************************************
-Copyright (c) 2022 Tencent, Inc. All rights reserved.
+Copyright (c) 2019 Tencent, Inc. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ***************************************************************************** */
+
+/////////////////////
+///// WX Cloud Apis
+/////////////////////
+
+/**
+ * Common interfaces and types
+ */
 
 interface IAPIError {
     errMsg: string
@@ -45,7 +41,7 @@ interface IInitCloudConfig {
         | {
               database?: string
               functions?: string
-              storage?: string
+              storage?: string,
           }
     traceUser?: boolean
 }
@@ -92,45 +88,32 @@ interface WxCloud {
 
     callFunction(param: OQ<ICloud.CallFunctionParam>): void
     callFunction(
-        param: RQ<ICloud.CallFunctionParam>
+        param: RQ<ICloud.CallFunctionParam>,
     ): Promise<ICloud.CallFunctionResult>
 
     uploadFile(param: OQ<ICloud.UploadFileParam>): WechatMiniprogram.UploadTask
     uploadFile(
-        param: RQ<ICloud.UploadFileParam>
+        param: RQ<ICloud.UploadFileParam>,
     ): Promise<ICloud.UploadFileResult>
 
     downloadFile(
-        param: OQ<ICloud.DownloadFileParam>
+        param: OQ<ICloud.DownloadFileParam>,
     ): WechatMiniprogram.DownloadTask
     downloadFile(
-        param: RQ<ICloud.DownloadFileParam>
+        param: RQ<ICloud.DownloadFileParam>,
     ): Promise<ICloud.DownloadFileResult>
 
     getTempFileURL(param: OQ<ICloud.GetTempFileURLParam>): void
     getTempFileURL(
-        param: RQ<ICloud.GetTempFileURLParam>
+        param: RQ<ICloud.GetTempFileURLParam>,
     ): Promise<ICloud.GetTempFileURLResult>
 
     deleteFile(param: OQ<ICloud.DeleteFileParam>): void
     deleteFile(
-        param: RQ<ICloud.DeleteFileParam>
+        param: RQ<ICloud.DeleteFileParam>,
     ): Promise<ICloud.DeleteFileResult>
 
     database: (config?: ICloudConfig) => DB.Database
-
-    CloudID: ICloud.ICloudIDConstructor
-    CDN: ICloud.ICDNConstructor
-
-    callContainer(param: OQ<ICloud.CallContainerParam>): void
-    callContainer(
-        param: RQ<ICloud.CallContainerParam>
-    ): Promise<ICloud.CallContainerResult>
-
-    connectContainer(param: OQ<ICloud.ConnectContainerParam>): void
-    connectContainer(
-        param: RQ<ICloud.ConnectContainerParam>
-    ): Promise<ICloud.ConnectContainerResult>
 }
 
 declare namespace ICloud {
@@ -150,51 +133,6 @@ declare namespace ICloud {
         data?: CallFunctionData
         slow?: boolean
     }
-    // === end ===
-
-    // === API: container ===
-    type CallContainerData = AnyObject
-
-    interface CallContainerResult extends IAPISuccessParam {
-        data: any
-        statusCode: number
-        header: Record<string, any>
-        callID: string
-    }
-
-    interface CallContainerParam extends ICloudAPIParam<CallContainerResult> {
-        path: string
-        service?: string
-        method?: string
-        header?: Record<string, any>
-        data?: any // string, object, ArrayBuffer
-        dataType?: string
-        responseType?: string
-        timeout?: number
-        verbose?: boolean
-        followRedirect?: boolean
-    }
-
-    interface ConnectContainerResult extends IAPISuccessParam {
-        socketTask: WechatMiniprogram.SocketTask
-    }
-
-    interface ConnectSocketOptions extends IAPIParam<void> {
-        header?: Record<string, string>
-        protocols?: string[]
-        tcpNoDelay?: boolean
-        perMessageDeflate?: boolean
-        timeout?: number
-    }
-
-    type ConnectContainerParam = Omit<
-        ConnectSocketOptions,
-        'success' | 'fail' | 'complete'
-    > &
-        ICloudAPIParam<ConnectContainerResult> & {
-            service: string
-            path?: string
-        }
     // === end ===
 
     // === API: uploadFile ===
@@ -255,34 +193,6 @@ declare namespace ICloud {
         fileList: string[]
     }
     // === end ===
-
-    // === API: CloudID ===
-    abstract class CloudID {
-        constructor(cloudID: string)
-    }
-
-    interface ICloudIDConstructor {
-        new (cloudId: string): CloudID
-        (cloudId: string): CloudID
-    }
-    // === end ===
-
-    // === API: CDN ===
-    abstract class CDN {
-        target: string | ArrayBuffer | ICDNFilePathSpec
-        constructor(target: string | ArrayBuffer | ICDNFilePathSpec)
-    }
-
-    interface ICDNFilePathSpec {
-        type: 'filePath'
-        filePath: string
-    }
-
-    interface ICDNConstructor {
-        new (options: string | ArrayBuffer | ICDNFilePathSpec): CDN
-        (options: string | ArrayBuffer | ICDNFilePathSpec): CDN
-    }
-    // === end ===
 }
 
 // === Database ===
@@ -304,10 +214,13 @@ declare namespace DB {
 
     class CollectionReference extends Query {
         readonly collectionName: string
+        readonly database: Database
 
         private constructor(name: string, database: Database)
 
         doc(docId: string | number): DocumentReference
+
+        // add(options: IAddDocumentOptions): Promise<IAddResult> | void
 
         add(options: OQ<IAddDocumentOptions>): void
         add(options: RQ<IAddDocumentOptions>): Promise<IAddResult>
@@ -316,7 +229,7 @@ declare namespace DB {
     class DocumentReference {
         private constructor(docId: string | number, database: Database)
 
-        field(object: Record<string, any>): this
+        field(object: object): this
 
         get(options: OQ<IGetDocumentOptions>): void
         get(options?: RQ<IGetDocumentOptions>): Promise<IQuerySingleResult>
@@ -326,20 +239,13 @@ declare namespace DB {
 
         update(options: OQ<IUpdateSingleDocumentOptions>): void
         update(
-            options?: RQ<IUpdateSingleDocumentOptions>
+            options?: RQ<IUpdateSingleDocumentOptions>,
         ): Promise<IUpdateResult>
 
         remove(options: OQ<IRemoveSingleDocumentOptions>): void
         remove(
-            options?: RQ<IRemoveSingleDocumentOptions>
+            options?: RQ<IRemoveSingleDocumentOptions>,
         ): Promise<IRemoveResult>
-
-        watch(options: IWatchOptions): RealtimeListener
-    }
-
-    class RealtimeListener {
-        // "And Now His Watch Is Ended"
-        close: () => Promise<void>
     }
 
     class Query {
@@ -351,15 +257,13 @@ declare namespace DB {
 
         skip(offset: number): Query
 
-        field(object: Record<string, any>): Query
+        field(object: object): Query
 
         get(options: OQ<IGetDocumentOptions>): void
         get(options?: RQ<IGetDocumentOptions>): Promise<IQueryResult>
 
         count(options: OQ<ICountDocumentOptions>): void
         count(options?: RQ<ICountDocumentOptions>): Promise<ICountResult>
-
-        watch(options: IWatchOptions): RealtimeListener
     }
 
     interface DatabaseCommand {
@@ -375,7 +279,7 @@ declare namespace DB {
         geoNear(options: IGeoNearCommandOptions): DatabaseQueryCommand
         geoWithin(options: IGeoWithinCommandOptions): DatabaseQueryCommand
         geoIntersects(
-            options: IGeoIntersectsCommandOptions
+            options: IGeoIntersectsCommandOptions,
         ): DatabaseQueryCommand
 
         and(
@@ -384,170 +288,42 @@ declare namespace DB {
         or(
             ...expressions: Array<DatabaseLogicCommand | IQueryCondition>
         ): DatabaseLogicCommand
-        nor(
-            ...expressions: Array<DatabaseLogicCommand | IQueryCondition>
-        ): DatabaseLogicCommand
-        not(expression: DatabaseLogicCommand): DatabaseLogicCommand
-
-        exists(val: boolean): DatabaseQueryCommand
-
-        mod(divisor: number, remainder: number): DatabaseQueryCommand
-
-        all(val: any[]): DatabaseQueryCommand
-        elemMatch(val: any): DatabaseQueryCommand
-        size(val: number): DatabaseQueryCommand
 
         set(val: any): DatabaseUpdateCommand
         remove(): DatabaseUpdateCommand
         inc(val: number): DatabaseUpdateCommand
         mul(val: number): DatabaseUpdateCommand
-        min(val: number): DatabaseUpdateCommand
-        max(val: number): DatabaseUpdateCommand
-        rename(val: string): DatabaseUpdateCommand
-        bit(val: number): DatabaseUpdateCommand
 
         push(...values: any[]): DatabaseUpdateCommand
         pop(): DatabaseUpdateCommand
         shift(): DatabaseUpdateCommand
         unshift(...values: any[]): DatabaseUpdateCommand
-        addToSet(val: any): DatabaseUpdateCommand
-        pull(val: any): DatabaseUpdateCommand
-        pullAll(val: any): DatabaseUpdateCommand
-
-        project: {
-            slice(val: number | [number, number]): DatabaseProjectionCommand
-        }
-
-        aggregate: {
-            __safe_props__?: Set<string>
-
-            abs(val: any): DatabaseAggregateCommand
-            add(val: any): DatabaseAggregateCommand
-            addToSet(val: any): DatabaseAggregateCommand
-            allElementsTrue(val: any): DatabaseAggregateCommand
-            and(val: any): DatabaseAggregateCommand
-            anyElementTrue(val: any): DatabaseAggregateCommand
-            arrayElemAt(val: any): DatabaseAggregateCommand
-            arrayToObject(val: any): DatabaseAggregateCommand
-            avg(val: any): DatabaseAggregateCommand
-            ceil(val: any): DatabaseAggregateCommand
-            cmp(val: any): DatabaseAggregateCommand
-            concat(val: any): DatabaseAggregateCommand
-            concatArrays(val: any): DatabaseAggregateCommand
-            cond(val: any): DatabaseAggregateCommand
-            convert(val: any): DatabaseAggregateCommand
-            dateFromParts(val: any): DatabaseAggregateCommand
-            dateToParts(val: any): DatabaseAggregateCommand
-            dateFromString(val: any): DatabaseAggregateCommand
-            dateToString(val: any): DatabaseAggregateCommand
-            dayOfMonth(val: any): DatabaseAggregateCommand
-            dayOfWeek(val: any): DatabaseAggregateCommand
-            dayOfYear(val: any): DatabaseAggregateCommand
-            divide(val: any): DatabaseAggregateCommand
-            eq(val: any): DatabaseAggregateCommand
-            exp(val: any): DatabaseAggregateCommand
-            filter(val: any): DatabaseAggregateCommand
-            first(val: any): DatabaseAggregateCommand
-            floor(val: any): DatabaseAggregateCommand
-            gt(val: any): DatabaseAggregateCommand
-            gte(val: any): DatabaseAggregateCommand
-            hour(val: any): DatabaseAggregateCommand
-            ifNull(val: any): DatabaseAggregateCommand
-            in(val: any): DatabaseAggregateCommand
-            indexOfArray(val: any): DatabaseAggregateCommand
-            indexOfBytes(val: any): DatabaseAggregateCommand
-            indexOfCP(val: any): DatabaseAggregateCommand
-            isArray(val: any): DatabaseAggregateCommand
-            isoDayOfWeek(val: any): DatabaseAggregateCommand
-            isoWeek(val: any): DatabaseAggregateCommand
-            isoWeekYear(val: any): DatabaseAggregateCommand
-            last(val: any): DatabaseAggregateCommand
-            let(val: any): DatabaseAggregateCommand
-            literal(val: any): DatabaseAggregateCommand
-            ln(val: any): DatabaseAggregateCommand
-            log(val: any): DatabaseAggregateCommand
-            log10(val: any): DatabaseAggregateCommand
-            lt(val: any): DatabaseAggregateCommand
-            lte(val: any): DatabaseAggregateCommand
-            ltrim(val: any): DatabaseAggregateCommand
-            map(val: any): DatabaseAggregateCommand
-            max(val: any): DatabaseAggregateCommand
-            mergeObjects(val: any): DatabaseAggregateCommand
-            meta(val: any): DatabaseAggregateCommand
-            min(val: any): DatabaseAggregateCommand
-            millisecond(val: any): DatabaseAggregateCommand
-            minute(val: any): DatabaseAggregateCommand
-            mod(val: any): DatabaseAggregateCommand
-            month(val: any): DatabaseAggregateCommand
-            multiply(val: any): DatabaseAggregateCommand
-            neq(val: any): DatabaseAggregateCommand
-            not(val: any): DatabaseAggregateCommand
-            objectToArray(val: any): DatabaseAggregateCommand
-            or(val: any): DatabaseAggregateCommand
-            pow(val: any): DatabaseAggregateCommand
-            push(val: any): DatabaseAggregateCommand
-            range(val: any): DatabaseAggregateCommand
-            reduce(val: any): DatabaseAggregateCommand
-            reverseArray(val: any): DatabaseAggregateCommand
-            rtrim(val: any): DatabaseAggregateCommand
-            second(val: any): DatabaseAggregateCommand
-            setDifference(val: any): DatabaseAggregateCommand
-            setEquals(val: any): DatabaseAggregateCommand
-            setIntersection(val: any): DatabaseAggregateCommand
-            setIsSubset(val: any): DatabaseAggregateCommand
-            setUnion(val: any): DatabaseAggregateCommand
-            size(val: any): DatabaseAggregateCommand
-            slice(val: any): DatabaseAggregateCommand
-            split(val: any): DatabaseAggregateCommand
-            sqrt(val: any): DatabaseAggregateCommand
-            stdDevPop(val: any): DatabaseAggregateCommand
-            stdDevSamp(val: any): DatabaseAggregateCommand
-            strcasecmp(val: any): DatabaseAggregateCommand
-            strLenBytes(val: any): DatabaseAggregateCommand
-            strLenCP(val: any): DatabaseAggregateCommand
-            substr(val: any): DatabaseAggregateCommand
-            substrBytes(val: any): DatabaseAggregateCommand
-            substrCP(val: any): DatabaseAggregateCommand
-            subtract(val: any): DatabaseAggregateCommand
-            sum(val: any): DatabaseAggregateCommand
-            switch(val: any): DatabaseAggregateCommand
-            toBool(val: any): DatabaseAggregateCommand
-            toDate(val: any): DatabaseAggregateCommand
-            toDecimal(val: any): DatabaseAggregateCommand
-            toDouble(val: any): DatabaseAggregateCommand
-            toInt(val: any): DatabaseAggregateCommand
-            toLong(val: any): DatabaseAggregateCommand
-            toObjectId(val: any): DatabaseAggregateCommand
-            toString(val: any): DatabaseAggregateCommand
-            toLower(val: any): DatabaseAggregateCommand
-            toUpper(val: any): DatabaseAggregateCommand
-            trim(val: any): DatabaseAggregateCommand
-            trunc(val: any): DatabaseAggregateCommand
-            type(val: any): DatabaseAggregateCommand
-            week(val: any): DatabaseAggregateCommand
-            year(val: any): DatabaseAggregateCommand
-            zip(val: any): DatabaseAggregateCommand
-        }
     }
-
-    class DatabaseAggregateCommand {}
 
     enum LOGIC_COMMANDS_LITERAL {
         AND = 'and',
         OR = 'or',
         NOT = 'not',
-        NOR = 'nor'
+        NOR = 'nor',
     }
 
     class DatabaseLogicCommand {
-        and(...expressions: DatabaseLogicCommand[]): DatabaseLogicCommand
-        or(...expressions: DatabaseLogicCommand[]): DatabaseLogicCommand
-        nor(...expressions: DatabaseLogicCommand[]): DatabaseLogicCommand
-        not(expression: DatabaseLogicCommand): DatabaseLogicCommand
+        fieldName: string | InternalSymbol
+        operator: LOGIC_COMMANDS_LITERAL | string
+        operands: any[]
+
+        _setFieldName(fieldName: string): DatabaseLogicCommand
+
+        and(
+            ...expressions: Array<DatabaseLogicCommand | IQueryCondition>
+        ): DatabaseLogicCommand
+        or(
+            ...expressions: Array<DatabaseLogicCommand | IQueryCondition>
+        ): DatabaseLogicCommand
     }
 
     enum QUERY_COMMANDS_LITERAL {
-        // comparison
+        // normal
         EQ = 'eq',
         NEQ = 'neq',
         GT = 'gt',
@@ -560,17 +336,13 @@ declare namespace DB {
         GEO_NEAR = 'geoNear',
         GEO_WITHIN = 'geoWithin',
         GEO_INTERSECTS = 'geoIntersects',
-        // element
-        EXISTS = 'exists',
-        // evaluation
-        MOD = 'mod',
-        // array
-        ALL = 'all',
-        ELEM_MATCH = 'elemMatch',
-        SIZE = 'size'
     }
 
     class DatabaseQueryCommand extends DatabaseLogicCommand {
+        operator: QUERY_COMMANDS_LITERAL | string
+
+        _setFieldName(fieldName: string): DatabaseQueryCommand
+
         eq(val: any): DatabaseLogicCommand
         neq(val: any): DatabaseLogicCommand
         gt(val: any): DatabaseLogicCommand
@@ -580,49 +352,37 @@ declare namespace DB {
         in(val: any[]): DatabaseLogicCommand
         nin(val: any[]): DatabaseLogicCommand
 
-        exists(val: boolean): DatabaseLogicCommand
-
-        mod(divisor: number, remainder: number): DatabaseLogicCommand
-
-        all(val: any[]): DatabaseLogicCommand
-        elemMatch(val: any): DatabaseLogicCommand
-        size(val: number): DatabaseLogicCommand
-
         geoNear(options: IGeoNearCommandOptions): DatabaseLogicCommand
         geoWithin(options: IGeoWithinCommandOptions): DatabaseLogicCommand
         geoIntersects(
-            options: IGeoIntersectsCommandOptions
+            options: IGeoIntersectsCommandOptions,
         ): DatabaseLogicCommand
     }
 
-    enum PROJECTION_COMMANDS_LITERAL {
-        SLICE = 'slice'
-    }
-
-    class DatabaseProjectionCommand {}
-
     enum UPDATE_COMMANDS_LITERAL {
-        // field
         SET = 'set',
         REMOVE = 'remove',
         INC = 'inc',
         MUL = 'mul',
-        MIN = 'min',
-        MAX = 'max',
-        RENAME = 'rename',
-        // bitwise
-        BIT = 'bit',
-        // array
         PUSH = 'push',
         POP = 'pop',
         SHIFT = 'shift',
         UNSHIFT = 'unshift',
-        ADD_TO_SET = 'addToSet',
-        PULL = 'pull',
-        PULL_ALL = 'pullAll'
     }
 
-    class DatabaseUpdateCommand {}
+    class DatabaseUpdateCommand {
+        fieldName: string | InternalSymbol
+        operator: UPDATE_COMMANDS_LITERAL
+        operands: any[]
+
+        constructor(
+            operator: UPDATE_COMMANDS_LITERAL,
+            operands: any[],
+            fieldName?: string | InternalSymbol,
+        )
+
+        _setFieldName(fieldName: string): DatabaseUpdateCommand
+    }
 
     class Batch {}
 
@@ -630,21 +390,21 @@ declare namespace DB {
      * A contract that all API provider must adhere to
      */
     class APIBaseContract<
-        PromiseReturn,
-        CallbackReturn,
-        Param extends IAPIParam,
-        Context = any
+        PROMISE_RETURN,
+        CALLBACK_RETURN,
+        PARAM extends IAPIParam,
+        CONTEXT = any
     > {
-        getContext(param: Param): Context
+        getContext(param: PARAM): CONTEXT
 
         /**
          * In case of callback-style invocation, this function will be called
          */
-        getCallbackReturn(param: Param, context: Context): CallbackReturn
+        getCallbackReturn(param: PARAM, context: CONTEXT): CALLBACK_RETURN
 
-        getFinalParam<T extends Param>(param: Param, context: Context): T
+        getFinalParam<T extends PARAM>(param: PARAM, context: CONTEXT): T
 
-        run<T extends Param>(param: T): Promise<PromiseReturn>
+        run<T extends PARAM>(param: T): Promise<PROMISE_RETURN>
     }
 
     interface IGeoPointConstructor {
@@ -666,10 +426,10 @@ declare namespace DB {
 
     interface IGeoMultiLineStringConstructor {
         new (
-            lineStrings: GeoLineString[] | IGeoJSONMultiLineString
+            lineStrings: GeoLineString[] | IGeoJSONMultiLineString,
         ): GeoMultiLineString
         (
-            lineStrings: GeoLineString[] | IGeoJSONMultiLineString
+            lineStrings: GeoLineString[] | IGeoJSONMultiLineString,
         ): GeoMultiLineString
     }
 
@@ -736,7 +496,7 @@ declare namespace DB {
 
         constructor(longitude: number, latitude: number)
 
-        toJSON(): Record<string, any>
+        toJSON(): object
         toString(): string
     }
 
@@ -877,36 +637,6 @@ declare namespace DB {
 
     type IRemoveSingleDocumentOptions = IDBAPIParam
 
-    interface IWatchOptions {
-        // server realtime data init & change event
-        onChange: (snapshot: ISnapshot) => void
-        // error while connecting / listening
-        onError: (error: any) => void
-    }
-
-    interface ISnapshot {
-        id: number
-        docChanges: ISingleDBEvent[]
-        docs: Record<string, any>
-        type?: SnapshotType
-    }
-
-    type SnapshotType = 'init'
-
-    interface ISingleDBEvent {
-        id: number
-        dataType: DataType
-        queueType: QueueType
-        docId: string
-        doc: Record<string, any>
-        updatedFields?: Record<string, any>
-        removedFields?: string[]
-    }
-
-    type DataType = 'init' | 'update' | 'replace' | 'add' | 'remove' | 'limit'
-
-    type QueueType = 'init' | 'enqueue' | 'dequeue' | 'update'
-
     interface IQueryCondition {
         [key: string]: any
     }
@@ -933,7 +663,7 @@ declare namespace DB {
 
     interface IUpdateResult extends IAPISuccessParam {
         stats: {
-            updated: number
+            updated: number,
             // created: number,
         }
     }
@@ -942,13 +672,13 @@ declare namespace DB {
         _id: DocumentId
         stats: {
             updated: number
-            created: number
+            created: number,
         }
     }
 
     interface IRemoveResult extends IAPISuccessParam {
         stats: {
-            removed: number
+            removed: number,
         }
     }
 

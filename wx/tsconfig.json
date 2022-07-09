@@ -3,23 +3,23 @@
     "strictNullChecks": true,
     "noImplicitAny": true,
     "module": "CommonJS",
-    "target": "ES2020",
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
+    "target": "ES6",
+    "allowJs": false,
     "experimentalDecorators": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "alwaysStrict": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
+    "removeComments": true,
+    "pretty": true,
     "strictPropertyInitialization": true,
-    "lib": ["ES2020"],
-    "typeRoots": [
-      "./typings"
-    ]
+    "lib": ["es6"],
+    "types": ["miniprogram-api-typings"]
   },
   "include": [
     "./**/*.ts"

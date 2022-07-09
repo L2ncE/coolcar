@@ -1,52 +1,87 @@
 {
-  "description": "项目配置文件，详见文档：https://developers.weixin.qq.com/miniprogram/dev/devtools/projectconfig.html",
+  "description": "项目配置文件",
   "packOptions": {
     "ignore": [],
     "include": []
   },
-  "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
+  "libVersion": "2.9.3",
   "projectname": "coolcar",
+  "miniprogramRoot": "miniprogram/",
+  "scripts": {
+    "beforeCompile": "npm run tsc",
+    "beforePreview": "npm run tsc",
+    "beforeUpload": "npm run tsc"
+  },
   "setting": {
-    "useCompilerPlugins": [
-      "typescript"
-    ],
-    "urlCheck": true,
-    "coverView": true,
+    "urlCheck": false,
     "es6": true,
+    "enhance": true,
     "postcss": true,
-    "lazyloadPlaceholderEnable": false,
     "preloadBackgroundData": false,
     "minified": true,
+    "newFeature": false,
+    "coverView": true,
+    "nodeModules": true,
     "autoAudits": false,
-    "uglifyFileName": false,
-    "uploadWithSourceMap": true,
-    "enhance": true,
     "showShadowRootInWxmlPanel": true,
-    "packNpmManually": false,
-    "packNpmRelationList": [],
-    "minifyWXSS": true,
-    "useStaticServer": true,
-    "showES6CompileOption": false,
+    "scopeDataCheck": false,
+    "uglifyFileName": false,
     "checkInvalidKey": true,
+    "checkSiteMap": false,
+    "uploadWithSourceMap": true,
+    "compileHotReLoad": false,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
     },
-    "disableUseStrict": false,
-    "minifyWXML": true,
-    "useApiHook": true,
-    "useIsolateContext": true
+    "useIsolateContext": true,
+    "useCompilerModule": false,
+    "userConfirmedUseCompilerModuleSwitch": false
   },
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},
-  "condition": {},
-  "srcMiniprogramRoot": "miniprogram/",
   "appid": "wxe38907ce2b24ce99",
-  "libVersion": "2.24.7",
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "pages/learncss/learncss",
+          "pathName": "pages/learncss/learncss",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "pages/register/register",
+          "pathName": "pages/register/register",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "pages/lock/lock",
+          "pathName": "pages/lock/lock",
+          "query": "car_id=demo_car",
+          "scene": null
+        },
+        {
+          "name": "pages/driving/driving",
+          "pathName": "pages/driving/driving",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "pages/mytrips/mytrips",
+          "pathName": "pages/mytrips/mytrips",
+          "query": "",
+          "scene": null
+        }
+      ]
+    }
+  },
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "srcMiniprogramRoot": "dist/"
 }

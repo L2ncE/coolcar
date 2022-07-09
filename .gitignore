@@ -21,3 +21,5 @@ wx/miniprogram/.js
 .idea
 *.xml
 *.iml
+
+wx/.js
