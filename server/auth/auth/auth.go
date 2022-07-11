@@ -28,7 +28,7 @@ func (s *Service) Login(_ context.Context, req *authpb.LoginRequest) (*authpb.Lo
 	s.Logger.Info("received code", zap.String("code", req.Code))
 	return &authpb.LoginResponse{
 		AccessToken: "token for " + req.Code,
-		ExpiresIn:   7200,
+		ExpiresIn:   req.Time,
 	}, nil
 	//openID, err := s.OpenIDResolver.Resolve(req.Code)
 	//if err != nil {

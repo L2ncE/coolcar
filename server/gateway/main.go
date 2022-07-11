@@ -6,7 +6,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"net/http"
 )
@@ -16,13 +15,7 @@ func main() {
 	c, cancel := context.WithCancel(c)
 	defer cancel()
 
-	mux := runtime.NewServeMux(runtime.WithMarshalerOption(
-		runtime.MIMEWildcard, &runtime.JSONPb{
-			MarshalOptions: protojson.MarshalOptions{
-				UseProtoNames:  true,
-				UseEnumNumbers: true,
-			},
-		}))
+	mux := runtime.NewServeMux()
 
 	err := authpb.RegisterAuthServiceHandlerFromEndpoint(
 		c, mux, "localhost:8081",
