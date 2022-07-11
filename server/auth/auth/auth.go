@@ -9,15 +9,16 @@ import (
 // Service implements auth service.
 type Service struct {
 	authpb.UnimplementedAuthServiceServer
-	Logger *zap.Logger
+	OpenIDResolver OpenIDResolver
+	Logger         *zap.Logger
 }
 
-//// OpenIDResolver resolves an authorization code
-//// to an open id.
-//type OpenIDResolver interface {
-//	Resolve(code string) (string, error)
-//}
-//
+// OpenIDResolver resolves an authorization code
+// to an open id.
+type OpenIDResolver interface {
+	Resolve(code string) string
+}
+
 //// TokenGenerator generates a token for the specified account.
 //type TokenGenerator interface {
 //	GenerateToken(accountID string, expire time.Duration) (string, error)
@@ -25,17 +26,12 @@ type Service struct {
 
 // Login logs a user in.
 func (s *Service) Login(_ context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
-	s.Logger.Info("received code", zap.String("code", req.Code))
+	openID := s.OpenIDResolver.Resolve(req.Code)
+
 	return &authpb.LoginResponse{
-		AccessToken: "token for " + req.Code,
-		ExpiresIn:   req.Time,
+		AccessToken: "token for openid" + openID,
+		ExpiresIn:   7200,
 	}, nil
-	//openID, err := s.OpenIDResolver.Resolve(req.Code)
-	//if err != nil {
-	//	return nil, status.Errorf(codes.Unavailable,
-	//		"cannot resolve openid: %v", err)
-	//}
-	//
 	//accountID, err := s.Mongo.ResolveAccountID(c, openID)
 	//if err != nil {
 	//	s.Logger.Error("cannot resolve account id", zap.Error(err))
