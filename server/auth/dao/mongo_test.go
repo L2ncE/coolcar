@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-var mongoURI string
+//var mongoURI string
 
 func TestResolveAccountID(t *testing.T) {
 	c := context.Background()

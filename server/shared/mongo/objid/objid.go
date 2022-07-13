@@ -27,6 +27,6 @@ func ToAccountID(oid primitive.ObjectID) id.AccountID {
 }
 
 // ToTripID converts object id to trip id.
-func ToTripID(oid primitive.ObjectID) id.TripID {
-	return id.TripID(oid.Hex())
-}
+//func ToTripID(oid primitive.ObjectID) id.TripID {
+//	return id.TripID(oid.Hex())
+//}

@@ -38,18 +38,18 @@ func findRows(c context.Context, col *mongo.Collection) {
 	}
 }
 
-func insertRows(c context.Context, col *mongo.Collection) {
-	res, err := col.InsertMany(c, []interface{}{
-		bson.M{
-			"open_id": "123",
-		},
-		bson.M{
-			"open_id": "456",
-		},
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("%+v", res)
-}
+//func insertRows(c context.Context, col *mongo.Collection) {
+//	res, err := col.InsertMany(c, []interface{}{
+//		bson.M{
+//			"open_id": "123",
+//		},
+//		bson.M{
+//			"open_id": "456",
+//		},
+//	})
+//	if err != nil {
+//		panic(err)
+//	}
+//
+//	fmt.Printf("%+v", res)
+//}
