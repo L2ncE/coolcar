@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	mgo "coolcar/shared/mongo"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,12 +12,11 @@ import (
 
 func main() {
 	c := context.Background()
-	mc, err := mongo.Connect(c, options.Client().ApplyURI("mongodb://42.192.155.29:27017"))
+	mc, err := mongo.Connect(c, options.Client().ApplyURI(mgo.MongoURL))
 	if err != nil {
 		panic(err)
 	}
 	col := mc.Database("coolcar").Collection("account")
-
 	findRows(c, col)
 }
 
