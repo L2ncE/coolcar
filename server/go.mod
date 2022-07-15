@@ -3,6 +3,7 @@ module coolcar
 go 1.18
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.3

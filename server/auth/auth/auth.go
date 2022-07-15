@@ -7,12 +7,15 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 // Service implements auth service.
 type Service struct {
 	authpb.UnimplementedAuthServiceServer
 	OpenIDResolver OpenIDResolver
+	TokenGenerator TokenGenerator
+	TokenExpire    time.Duration
 	Mongo          *dao.Mongo
 	Logger         *zap.Logger
 }
@@ -23,10 +26,10 @@ type OpenIDResolver interface {
 	Resolve(code string) string
 }
 
-//// TokenGenerator generates a token for the specified account.
-//type TokenGenerator interface {
-//	GenerateToken(accountID string, expire time.Duration) (string, error)
-//}
+// TokenGenerator generates a token for the specified account.
+type TokenGenerator interface {
+	GenerateToken(accountID string, expire time.Duration) (string, error)
+}
 
 // Login logs a user in.
 func (s *Service) Login(c context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
@@ -34,28 +37,18 @@ func (s *Service) Login(c context.Context, req *authpb.LoginRequest) (*authpb.Lo
 
 	accountID, err := s.Mongo.ResolveAccountID(c, openID)
 	if err != nil {
-		s.Logger.Error("canonot resolve account id", zap.Error(err))
+		s.Logger.Error("cannot resolve account id", zap.Error(err))
+		return nil, status.Error(codes.Internal, "")
+	}
+
+	tkn, err := s.TokenGenerator.GenerateToken(accountID.String(), s.TokenExpire)
+	if err != nil {
+		s.Logger.Error("cannot generate token", zap.Error(err))
 		return nil, status.Error(codes.Internal, "")
 	}
 
 	return &authpb.LoginResponse{
-		AccessToken: "token for account id: " + accountID.String(),
-		ExpiresIn:   7200,
+		AccessToken: tkn,
+		ExpiresIn:   int32(s.TokenExpire.Seconds()),
 	}, nil
-	//accountID, err := s.Mongo.ResolveAccountID(c, openID)
-	//if err != nil {
-	//	s.Logger.Error("cannot resolve account id", zap.Error(err))
-	//	return nil, status.Error(codes.Internal, "")
-	//}
-	//
-	//tkn, err := s.TokenGenerator.GenerateToken(accountID.String(), s.TokenExpire)
-	//if err != nil {
-	//	s.Logger.Error("cannot generate token", zap.Error(err))
-	//	return nil, status.Error(codes.Internal, "")
-	//}
-	//
-	//return &authpb.LoginResponse{
-	//	AccessToken: tkn,
-	//	ExpiresIn:   int32(s.TokenExpire.Seconds()),
-	//}, nil
 }
