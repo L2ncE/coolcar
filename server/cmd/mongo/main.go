@@ -18,6 +18,7 @@ func main() {
 	}
 	col := mc.Database("coolcar").Collection("account")
 	insertRows(c, col)
+	findRows(c, col)
 }
 
 func findRows(c context.Context, col *mongo.Collection) {

@@ -38,7 +38,7 @@ func main() {
 		logger.Fatal("cannot connect mongodb", zap.Error(err))
 	}
 
-	pkFile, err := os.Open("auth/private.key")
+	pkFile, err := os.Open("shared/auth/private.key")
 	if err != nil {
 		logger.Fatal("cannot open private key", zap.Error(err))
 	}
