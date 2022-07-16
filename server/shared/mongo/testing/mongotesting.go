@@ -3,6 +3,7 @@ package mongotesting
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"testing"
@@ -20,7 +21,7 @@ const (
 
 var mongoURI string
 
-//const defaultMongoURI = "mongodb://localhost:27017"
+const defaultMongoURI = "mongodb://localhost:27017"
 
 // RunWithMongoInDocker runs the tests with
 // a mongodb instance in a docker container.
@@ -83,41 +84,41 @@ func NewClient(c context.Context) (*mongo.Client, error) {
 	return mongo.Connect(c, options.Client().ApplyURI(mongoURI))
 }
 
-//// NewDefaultClient creates a client connected to localhost:27017
-//func NewDefaultClient(c context.Context) (*mongo.Client, error) {
-//	return mongo.Connect(c, options.Client().ApplyURI(defaultMongoURI))
-//}
+// NewDefaultClient creates a client connected to localhost:27017
+func NewDefaultClient(c context.Context) (*mongo.Client, error) {
+	return mongo.Connect(c, options.Client().ApplyURI(defaultMongoURI))
+}
 
-//// SetupIndexes sets up indexes for the given database.
-//func SetupIndexes(c context.Context, d *mongo.Database) error {
-//	_, err := d.Collection("account").Indexes().CreateOne(c, mongo.IndexModel{
-//		Keys: bson.D{
-//			{Key: "open_id", Value: 1},
-//		},
-//		Options: options.Index().SetUnique(true),
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	_, err = d.Collection("trip").Indexes().CreateOne(c, mongo.IndexModel{
-//		Keys: bson.D{
-//			{Key: "trip.accountid", Value: 1},
-//			{Key: "trip.status", Value: 1},
-//		},
-//		Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{
-//			"trip.status": 1,
-//		}),
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	_, err = d.Collection("profile").Indexes().CreateOne(c, mongo.IndexModel{
-//		Keys: bson.D{
-//			{Key: "accountid", Value: 1},
-//		},
-//		Options: options.Index().SetUnique(true),
-//	})
-//	return err
-//}
+// SetupIndexes sets up indexes for the given database.
+func SetupIndexes(c context.Context, d *mongo.Database) error {
+	_, err := d.Collection("account").Indexes().CreateOne(c, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "open_id", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = d.Collection("trip").Indexes().CreateOne(c, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "trip.accountid", Value: 1},
+			{Key: "trip.status", Value: 1},
+		},
+		Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{
+			"trip.status": 1,
+		}),
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = d.Collection("profile").Indexes().CreateOne(c, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "accountid", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	})
+	return err
+}
