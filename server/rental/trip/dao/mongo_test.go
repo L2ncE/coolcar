@@ -136,6 +136,104 @@ func TestGetTrip(t *testing.T) {
 	}
 }
 
+func TestGetTrips(t *testing.T) {
+	rows := []struct {
+		id        string
+		accountID string
+		status    rentalpb.TripStatus
+	}{
+		{
+			id:        "5f8132eb10714bf629489051",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_FINISHED,
+		},
+		{
+			id:        "5f8132eb10714bf629489052",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_FINISHED,
+		},
+		{
+			id:        "5f8132eb10714bf629489053",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_FINISHED,
+		},
+		{
+			id:        "5f8132eb10714bf629489054",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_IN_PROGRESS,
+		},
+		{
+			id:        "5f8132eb10714bf629489055",
+			accountID: "account_id_for_get_trips_1",
+			status:    rentalpb.TripStatus_IN_PROGRESS,
+		},
+	}
+
+	c := context.Background()
+	mc, err := mongotesting.NewClient(c)
+	if err != nil {
+		t.Fatalf("cannot connect mongodb: %v", err)
+	}
+
+	m := NewMongo(mc.Database("coolcar"))
+
+	for _, r := range rows {
+		mgutil.NewObjIDWithValue(id.TripID(r.id))
+		_, err := m.CreateTrip(c, &rentalpb.Trip{
+			AccountId: r.accountID,
+			Status:    r.status,
+		})
+		if err != nil {
+			t.Fatalf("cannot create rows: %v", err)
+		}
+	}
+
+	cases := []struct {
+		name       string
+		accountID  string
+		status     rentalpb.TripStatus
+		wantCount  int
+		wantOnlyID string
+	}{
+		{
+			name:      "get_all",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_TS_NOT_SPECIFIED,
+			wantCount: 4,
+		},
+		{
+			name:       "get_in_progress",
+			accountID:  "account_id_for_get_trips",
+			status:     rentalpb.TripStatus_IN_PROGRESS,
+			wantCount:  1,
+			wantOnlyID: "5f8132eb10714bf629489054",
+		},
+	}
+
+	for _, cc := range cases {
+		t.Run(cc.name, func(t *testing.T) {
+			res, err := m.GetTrips(context.Background(),
+				id.AccountID(cc.accountID),
+				cc.status)
+			if err != nil {
+				t.Errorf("cannot get trips: %v", err)
+			}
+
+			if cc.wantCount != len(res) {
+				t.Errorf("incorrect result count; want: %d, got: %d",
+					cc.wantCount, len(res))
+			}
+
+			if cc.wantOnlyID != "" && len(res) > 0 {
+				if cc.wantOnlyID != res[0].ID.Hex() {
+					t.Errorf("only_id incorrect; want: %q, got %q",
+						cc.wantOnlyID, res[0].ID.Hex())
+				}
+			}
+		})
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(mongotesting.RunWithMongoInDocker(m))
 }
