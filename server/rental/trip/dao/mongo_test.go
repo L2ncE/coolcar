@@ -234,6 +234,93 @@ func TestGetTrips(t *testing.T) {
 	}
 }
 
+func TestUpdateTrip(t *testing.T) {
+	c := context.Background()
+	mc, err := mongotesting.NewClient(c)
+	if err != nil {
+		t.Fatalf("cannot connect mongodb: %v", err)
+	}
+
+	m := NewMongo(mc.Database("coolcar"))
+	tid := id.TripID("5f8132eb12714bf629489054")
+	aid := id.AccountID("account_for_update")
+
+	var now int64 = 10000
+	mgutil.NewObjIDWithValue(tid)
+	mgutil.UpdatedAt = func() int64 {
+		return now
+	}
+
+	tr, err := m.CreateTrip(c, &rentalpb.Trip{
+		AccountId: aid.String(),
+		Status:    rentalpb.TripStatus_IN_PROGRESS,
+		Start: &rentalpb.LocationStatus{
+			PoiName: "start_poi",
+		},
+	})
+	if err != nil {
+		t.Fatalf("cannot create trip: %v", err)
+	}
+	if tr.UpdatedAt != 10000 {
+		t.Fatalf("wrong updatedat; want: 10000, got: %d", tr.UpdatedAt)
+	}
+
+	update := &rentalpb.Trip{
+		AccountId: aid.String(),
+		Status:    rentalpb.TripStatus_IN_PROGRESS,
+		Start: &rentalpb.LocationStatus{
+			PoiName: "start_poi_updated",
+		},
+	}
+	cases := []struct {
+		name          string
+		now           int64
+		withUpdatedAt int64
+		wantErr       bool
+	}{
+		{
+			name:          "normal_update",
+			now:           20000,
+			withUpdatedAt: 10000,
+		},
+		{
+			name:          "update_with_stale_timestamp",
+			now:           30000,
+			withUpdatedAt: 10000,
+			wantErr:       true,
+		},
+		{
+			name:          "update_with_refetch",
+			now:           40000,
+			withUpdatedAt: 20000,
+		},
+	}
+
+	for _, cc := range cases {
+		now = cc.now
+		err := m.UpdateTrip(c, tid, aid, cc.withUpdatedAt, update)
+		if cc.wantErr {
+			if err == nil {
+				t.Errorf("%s: want error; got none", cc.name)
+			} else {
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("%s: cannot update: %v", cc.name, err)
+			}
+		}
+		updatedTrip, err := m.GetTrip(c, tid, aid)
+		if err != nil {
+			t.Errorf("%s: cannot get trip after udpate: %v", cc.name, err)
+		}
+		if cc.now != updatedTrip.UpdatedAt {
+			t.Errorf("%s: incorrect updatedat: want %d, got %d",
+				cc.name, cc.now, updatedTrip.UpdatedAt)
+		}
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(mongotesting.RunWithMongoInDocker(m))
 }
