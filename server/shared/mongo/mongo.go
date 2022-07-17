@@ -17,7 +17,7 @@ type ObjID struct {
 const (
 	IDFieldName        = "_id"
 	UpdatedAtFieldName = "updatedat"
-	MongoURL           = "mongodb://42.192.155.29:27017"
+	MongoURL           = "mongodb://localhost:27017"
 )
 
 // IDField defines the object id field.
