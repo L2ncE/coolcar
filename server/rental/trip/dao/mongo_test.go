@@ -5,7 +5,11 @@ import (
 	rentalpb "coolcar/rental/api/gen/v1"
 	"coolcar/shared/id"
 	mgutil "coolcar/shared/mongo"
+	"coolcar/shared/mongo/objid"
 	mongotesting "coolcar/shared/mongo/testing"
+	"github.com/google/go-cmp/cmp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/protobuf/testing/protocmp"
 	"os"
 	"testing"
 )
@@ -84,6 +88,51 @@ func TestCreateTrip(t *testing.T) {
 			t.Errorf("%s: incorrect trip id; want: %q; got: %q",
 				cc.name, cc.tripID, tr.ID.Hex())
 		}
+	}
+}
+
+func TestGetTrip(t *testing.T) {
+	c := context.Background()
+	mc, err := mongotesting.NewClient(c)
+	if err != nil {
+		t.Fatalf("cannot connect mongodb: %v", err)
+	}
+
+	m := NewMongo(mc.Database("coolcar"))
+	acct := id.AccountID("account1")
+	mgutil.NewObjID = primitive.NewObjectID
+	tr, err := m.CreateTrip(c, &rentalpb.Trip{
+		AccountId: acct.String(),
+		CarId:     "car1",
+		Start: &rentalpb.LocationStatus{
+			PoiName: "startpoint",
+			Location: &rentalpb.Location{
+				Latitude:  30,
+				Longitude: 120,
+			},
+		},
+		End: &rentalpb.LocationStatus{
+			PoiName:  "endpoint",
+			FeeCent:  10000,
+			KmDriven: 35,
+			Location: &rentalpb.Location{
+				Latitude:  35,
+				Longitude: 115,
+			},
+		},
+		Status: rentalpb.TripStatus_FINISHED,
+	})
+	if err != nil {
+		t.Fatalf("cannot create trip: %v", err)
+	}
+
+	got, err := m.GetTrip(c, objid.ToTripID(tr.ID), acct)
+	if err != nil {
+		t.Errorf("cannot get trip: %v", err)
+	}
+
+	if diff := cmp.Diff(tr, got, protocmp.Transform()); diff != "" {
+		t.Errorf("result differs; -want +got: %s", diff)
 	}
 }
 

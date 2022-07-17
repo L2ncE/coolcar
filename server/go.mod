@@ -6,6 +6,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/google/go-cmp v0.5.8
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.3
 	go.mongodb.org/mongo-driver v1.9.1
 	go.uber.org/zap v1.21.0
