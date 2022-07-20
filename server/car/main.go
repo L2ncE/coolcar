@@ -6,6 +6,9 @@ import (
 	"coolcar/car/car"
 	"coolcar/car/dao"
 	"coolcar/car/mq/amqpclt"
+	"coolcar/car/sim"
+	"coolcar/car/sim/pos"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"coolcar/shared/server"
 	"github.com/namsral/flag"
@@ -52,33 +55,33 @@ func main() {
 	}
 
 	// Run car simulations.
-	//carConn, err := grpc.Dial(*carAddr, grpc.WithInsecure())
-	//if err != nil {
-	//	logger.Fatal("cannot connect car service", zap.Error(err))
-	//}
+	carConn, err := grpc.Dial(*carAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		logger.Fatal("cannot connect car service", zap.Error(err))
+	}
 	//aiConn, err := grpc.Dial(*aiAddr, grpc.WithInsecure())
 	//if err != nil {
 	//	logger.Fatal("cannot connect ai service", zap.Error(err))
 	//}
-	//sub, err := amqpclt.NewSubscriber(amqpConn, exchange, logger)
-	//if err != nil {
-	//	logger.Fatal("cannot create subscriber", zap.Error(err))
-	//}
-	//posSub, err := amqpclt.NewSubscriber(amqpConn, "pos_sim", logger)
-	//if err != nil {
-	//	logger.Fatal("cannot create pos subscriber", zap.Error(err))
-	//}
-	//simController := &sim.Controller{
-	//	CarService:    carpb.NewCarServiceClient(carConn),
-	//	AIService:     coolenvpb.NewAIServiceClient(aiConn),
-	//	Logger:        logger,
-	//	CarSubscriber: sub,
-	//	PosSubscriber: &pos.Subscriber{
-	//		Sub:    posSub,
-	//		Logger: logger,
-	//	},
-	//}
-	//go simController.RunSimulations(context.Background())
+	sub, err := amqpclt.NewSubscriber(amqpConn, exchange, logger)
+	if err != nil {
+		logger.Fatal("cannot create subscriber", zap.Error(err))
+	}
+	posSub, err := amqpclt.NewSubscriber(amqpConn, "pos_sim", logger)
+	if err != nil {
+		logger.Fatal("cannot create pos subscriber", zap.Error(err))
+	}
+	simController := &sim.Controller{
+		CarService: carpb.NewCarServiceClient(carConn),
+		//AIService:     coolenvpb.NewAIServiceClient(aiConn),
+		Logger:        logger,
+		CarSubscriber: sub,
+		PosSubscriber: &pos.Subscriber{
+			Sub:    posSub,
+			Logger: logger,
+		},
+	}
+	go simController.RunSimulations(context.Background())
 
 	// Start websocket handler.
 	//u := &websocket.Upgrader{
