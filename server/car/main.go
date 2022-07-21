@@ -7,20 +7,21 @@ import (
 	"coolcar/car/dao"
 	"coolcar/car/mq/amqpclt"
 	"coolcar/car/sim"
-	"coolcar/car/sim/pos"
+	"coolcar/car/trip"
 	"coolcar/car/ws"
-	"github.com/gorilla/websocket"
+	rentalpb "coolcar/rental/api/gen/v1"
+	"coolcar/shared/server"
 	"google.golang.org/grpc/credentials/insecure"
+	"log"
 	"net/http"
 
-	"coolcar/shared/server"
+	"github.com/gorilla/websocket"
 	"github.com/namsral/flag"
 	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"log"
 )
 
 var addr = flag.String("addr", ":8084", "address to listen")
@@ -29,7 +30,6 @@ var mongoURI = flag.String("mongo_uri", "mongodb://localhost:27017", "mongo uri"
 var amqpURL = flag.String("amqp_url", "amqp://guest:guest@localhost:5672/", "amqp url")
 var carAddr = flag.String("car_addr", "localhost:8084", "address for car service")
 var tripAddr = flag.String("trip_addr", "localhost:8082", "address for trip service")
-var aiAddr = flag.String("ai_addr", "localhost:18001", "address for ai service")
 
 func main() {
 	flag.Parse()
@@ -62,27 +62,16 @@ func main() {
 	if err != nil {
 		logger.Fatal("cannot connect car service", zap.Error(err))
 	}
-	//aiConn, err := grpc.Dial(*aiAddr, grpc.WithInsecure())
-	//if err != nil {
-	//	logger.Fatal("cannot connect ai service", zap.Error(err))
-	//}
+
 	sub, err := amqpclt.NewSubscriber(amqpConn, exchange, logger)
 	if err != nil {
 		logger.Fatal("cannot create subscriber", zap.Error(err))
 	}
-	posSub, err := amqpclt.NewSubscriber(amqpConn, "pos_sim", logger)
-	if err != nil {
-		logger.Fatal("cannot create pos subscriber", zap.Error(err))
-	}
+
 	simController := &sim.Controller{
 		CarService: carpb.NewCarServiceClient(carConn),
-		//AIService:     coolenvpb.NewAIServiceClient(aiConn),
-		Logger:        logger,
-		CarSubscriber: sub,
-		PosSubscriber: &pos.Subscriber{
-			Sub:    posSub,
-			Logger: logger,
-		},
+		Logger:     logger,
+		Subscriber: sub,
 	}
 	go simController.RunSimulations(context.Background())
 
@@ -101,11 +90,11 @@ func main() {
 	}()
 
 	// Start trip updater.
-	//tripConn, err := grpc.Dial(*tripAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	//if err != nil {
-	//	logger.Fatal("cannot connect trip service", zap.Error(err))
-	//}
-	//go trip.RunUpdater(sub, rentalpb.NewTripServiceClient(tripConn), logger)
+	tripConn, err := grpc.Dial(*tripAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		logger.Fatal("cannot connect trip service", zap.Error(err))
+	}
+	go trip.RunUpdater(sub, rentalpb.NewTripServiceClient(tripConn), logger)
 
 	logger.Sugar().Fatal(server.RunGRPCServer(&server.GRPCConfig{
 		Name:   "car",
