@@ -8,7 +8,10 @@ import (
 	"coolcar/car/mq/amqpclt"
 	"coolcar/car/sim"
 	"coolcar/car/sim/pos"
+	"coolcar/car/ws"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc/credentials/insecure"
+	"net/http"
 
 	"coolcar/shared/server"
 	"github.com/namsral/flag"
@@ -84,18 +87,18 @@ func main() {
 	go simController.RunSimulations(context.Background())
 
 	// Start websocket handler.
-	//u := &websocket.Upgrader{
-	//	CheckOrigin: func(r *http.Request) bool {
-	//		return true
-	//	},
-	//}
-	//http.HandleFunc("/ws", ws.Handler(u, sub, logger))
-	//go func() {
-	//	addr := *wsAddr
-	//	logger.Info("HTTP server started.", zap.String("addr", addr))
-	//	logger.Sugar().Fatal(
-	//		http.ListenAndServe(addr, nil))
-	//}()
+	u := &websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	http.HandleFunc("/ws", ws.Handler(u, sub, logger))
+	go func() {
+		addr := *wsAddr
+		logger.Info("HTTP server started.", zap.String("addr", addr))
+		logger.Sugar().Fatal(
+			http.ListenAndServe(addr, nil))
+	}()
 
 	// Start trip updater.
 	//tripConn, err := grpc.Dial(*tripAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))

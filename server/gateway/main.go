@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	authpb "coolcar/auth/api/gen/v1"
+	carpb "coolcar/car/api/gen/v1"
 	rentalpb "coolcar/rental/api/gen/v1"
+	"coolcar/shared/auth"
 	"coolcar/shared/server"
 	"flag"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -11,6 +13,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
+	"net/textproto"
 )
 
 //var addr = flag.String("addr", ":8080", "address to listen")
@@ -19,7 +22,7 @@ var tripAddr = flag.String("trip_addr", "localhost:8082", "address for trip serv
 
 var profileAddr = flag.String("profile_addr", "localhost:8082", "address for profile service")
 
-//var carAddr = flag.String("car_addr", "localhost:8084", "address for car service")
+var carAddr = flag.String("car_addr", "localhost:8084", "address for car service")
 
 func main() {
 	lg, err := server.NewZapLogger()
@@ -31,7 +34,12 @@ func main() {
 	c, cancel := context.WithCancel(c)
 	defer cancel()
 
-	mux := runtime.NewServeMux()
+	mux := runtime.NewServeMux(runtime.WithIncomingHeaderMatcher(func(key string) (string, bool) {
+		if key == textproto.CanonicalMIMEHeaderKey(runtime.MetadataHeaderPrefix+auth.ImpersonateAccountHeader) {
+			return "", false
+		}
+		return runtime.DefaultHeaderMatcher(key)
+	}))
 
 	serverConfig := []struct {
 		name         string
@@ -52,6 +60,11 @@ func main() {
 			name:         "profile",
 			addr:         *profileAddr,
 			registerFunc: rentalpb.RegisterProfileServiceHandlerFromEndpoint,
+		},
+		{
+			name:         "car",
+			addr:         *carAddr,
+			registerFunc: carpb.RegisterCarServiceHandlerFromEndpoint,
 		},
 	}
 
