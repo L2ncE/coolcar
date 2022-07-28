@@ -16,7 +16,7 @@ import (
 	"net/textproto"
 )
 
-//var addr = flag.String("addr", ":8080", "address to listen")
+var addr = flag.String("addr", ":8080", "address to listen")
 var authAddr = flag.String("auth_addr", "localhost:8081", "address for auth service")
 var tripAddr = flag.String("trip_addr", "localhost:8082", "address for trip service")
 
@@ -25,6 +25,8 @@ var profileAddr = flag.String("profile_addr", "localhost:8082", "address for pro
 var carAddr = flag.String("car_addr", "localhost:8084", "address for car service")
 
 func main() {
+	flag.Parse()
+
 	lg, err := server.NewZapLogger()
 	if err != nil {
 		log.Fatalf("cannot create zap logger: %v", err)
@@ -77,7 +79,6 @@ func main() {
 			lg.Sugar().Fatalf("cannot register service %s: %v", s.name, err)
 		}
 	}
-	addr := ":8080"
-	lg.Sugar().Infof("grpc gateway started at %s", addr)
-	lg.Sugar().Fatal(http.ListenAndServe(addr, mux))
+	lg.Sugar().Infof("grpc gateway started at %s", *addr)
+	lg.Sugar().Fatal(http.ListenAndServe(*addr, mux))
 }
